@@ -3,6 +3,8 @@ import os
 from database.db_manager import DatabaseManager
 from utils.logger import setup_logger
 from datetime import datetime
+from decimal import Decimal
+import time
 
 logger = setup_logger('json_generator')
 db = DatabaseManager()
@@ -18,6 +20,28 @@ class JSONGenerator:
             return obj.isoformat()
         return obj
     
+    def decimal_converter(self, obj):
+        """Convierte objetos Decimal a float o int"""
+        if isinstance(obj, Decimal):
+            # Convertir a float manteniendo 2 decimales
+            return float(round(obj, 2))
+        return obj
+    
+    def safe_serialize(self, obj):
+        """Serializa objetos de forma segura para JSON"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, Decimal):
+            return float(round(obj, 2))
+        elif isinstance(obj, dict):
+            return {k: self.safe_serialize(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self.safe_serialize(item) for item in obj]
+        elif hasattr(obj, '__dict__'):
+            return self.safe_serialize(obj.__dict__)
+        else:
+            return obj
+    
     def generate_results_json(self):
         """Genera results.json con todos los productos"""
         try:
@@ -27,10 +51,10 @@ class JSONGenerator:
             products_list = []
             for product in products:
                 product_dict = dict(product)
-                # Convertir datetime a string
+                # Serializar objetos especiales
                 for key, value in product_dict.items():
-                    if isinstance(value, datetime):
-                        product_dict[key] = value.isoformat()
+                    if isinstance(value, (datetime, Decimal)):
+                        product_dict[key] = self.safe_serialize(value)
                 products_list.append(product_dict)
             
             output_file = os.path.join(self.data_dir, 'results.json')
@@ -55,8 +79,8 @@ class JSONGenerator:
                 file_dict = dict(file)
                 # Convertir datetime a string
                 for key, value in file_dict.items():
-                    if isinstance(value, datetime):
-                        file_dict[key] = value.isoformat()
+                    if isinstance(value, (datetime, Decimal)):
+                        file_dict[key] = self.safe_serialize(value)
                 files_list.append(file_dict)
             
             output_file = os.path.join(self.data_dir, 'files.json')
@@ -79,10 +103,10 @@ class JSONGenerator:
             events_list = []
             for event in events:
                 event_dict = dict(event)
-                # Convertir datetime a string
+                # Convertir datetime a string y Decimal a float
                 for key, value in event_dict.items():
-                    if isinstance(value, datetime):
-                        event_dict[key] = value.isoformat()
+                    if isinstance(value, (datetime, Decimal)):
+                        event_dict[key] = self.safe_serialize(value)
                 events_list.append(event_dict)
             
             output_file = os.path.join(self.data_dir, 'events.json')

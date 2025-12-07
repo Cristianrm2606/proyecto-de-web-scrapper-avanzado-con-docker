@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Agregar el directorio padre al path de Python
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from database.db_manager import DatabaseManager
