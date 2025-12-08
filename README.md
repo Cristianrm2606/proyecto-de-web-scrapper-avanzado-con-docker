@@ -18,7 +18,7 @@ Sistema completo de web scraping que extrae datos de sitios dinámicos (Mercado 
 - Automatización: APScheduler
 
 ## Estructura del Proyecto
-
+```bash
 proyecto-scraper/
 ├── scraper/
 │   ├── scraper_dynamic.py
@@ -56,7 +56,7 @@ proyecto-scraper/
 ├── requirements.txt
 ├── .env
 └── README.md
-
+```
 ## Configuración
 
 ### 1. Instalar PostgreSQL
