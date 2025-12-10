@@ -1,6 +1,8 @@
 
 # Proyecto Web Scraper Avanzado
 
+Este proyecto consiste en un web scrapper avanzado que utiliza Docker para aislar el entorno de ejecución. El scraper está diseñado para extraer datos de múltiples fuentes y almacenarlos de manera eficiente.
+
 Plataforma de scraping y visualización de datos con automatización, base de datos PostgreSQL y dashboard interactivo.
 
 ## Descripción
