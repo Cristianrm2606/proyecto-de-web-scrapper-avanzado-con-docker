@@ -1,5 +1,5 @@
 # Este archivo configura la base de datos para almacenar los datos extraídos por el scraper.
-# Incluye la creación de tablas y configuraciones iniciales.
+# Incluye la creación de las tablas y configuraciones iniciales.
 
 
 import psycopg2
