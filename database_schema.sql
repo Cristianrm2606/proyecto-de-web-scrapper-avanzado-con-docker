@@ -1,3 +1,6 @@
+-- Este archivo contiene el esquema de la base de datos que almacena los datos extraídos por el scraper.
+-- Incluye la creación de las tablas necesarias.
+
 
 DROP TABLE IF EXISTS scraped_files CASCADE;
 DROP TABLE IF EXISTS scraped_data CASCADE;
