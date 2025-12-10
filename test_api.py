@@ -1,5 +1,6 @@
 # Este archivo contiene las pruebas para verificar el funcionamiento de la API utilizada por el scraper.
 # Incluye pruebas de validación de datos y manejo de errores.
+# Se mejoraron las pruebas para incluir escenarios adicionales de manejo de errores.
 
 
 import requests
