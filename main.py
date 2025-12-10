@@ -1,4 +1,4 @@
-# Este es el archivo principal donde se inicia el scraper.
+# Este archivo principal donde se inicia el scraper.
 # La función main ejecuta el scraper para obtener los datos de las fuentes configuradas.
 
 
