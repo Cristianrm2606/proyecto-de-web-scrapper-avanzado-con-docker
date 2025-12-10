@@ -1,4 +1,4 @@
-# Este archivo contiene la lógica para programar y gestionar las tareas del scraper.
+# Este archivo contiene la lógica para programar y gestionar las tareas del scraper
 # Utiliza el scheduler para ejecutar el scraper en intervalos regulares.
 
 
