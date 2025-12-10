@@ -1,3 +1,7 @@
+# Este es el archivo principal donde se inicia el scraper.
+# La función main ejecuta el scraper para obtener los datos de las fuentes configuradas.
+
+
 import time
 from datetime import datetime
 from scraper.scraper_dynamic import DynamicScraper
