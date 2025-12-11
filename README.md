@@ -1,33 +1,73 @@
-
 # Proyecto Web Scraper Avanzado
 
-Plataforma de scraping y visualización de datos con automatización, base de datos PostgreSQL y dashboard interactivo.
+Plataforma completa de **scraping dinámico y estático**, procesamiento de datos, almacenamiento en PostgreSQL, API en JSON y dashboard interactivo.  
+Totalmente contenedorizado con **Docker + Docker Compose**.
 
-## Descripción
+---
 
-Sistema completo de web scraping que extrae datos de sitios dinámicos (Mercado Libre) y estáticos, almacena la información en PostgreSQL, expone APIs REST en JSON y visualiza todo en un dashboard moderno.
+## 📌 Descripción General
 
-## Tecnologías
+Este sistema realiza scraping de:
 
-- Backend: Python 3.9+
-- Web Scraping: Selenium, BeautifulSoup, Requests
-- Base de Datos: PostgreSQL 16
-- API: Flask + Flask-CORS
-- Frontend: HTML5, CSS3, JavaScript, Bootstrap 5
-- Calendario: FullCalendar.js
-- Automatización: APScheduler
+- **Sitios dinámicos** (MercadoLibre) con **Playwright**
+- **Sitios estáticos** usando **Requests + BeautifulSoup**
+- Descarga archivos y detecta cambios mediante **hash SHA-256**
+- Guarda toda la información en **PostgreSQL**
+- Expone JSON a través de una **API Flask**
+- Visualiza datos en un **dashboard web**
+- Automatiza scraping cada 30 minutos con **APScheduler**
 
-## Estructura del Proyecto
-```bash
+El proyecto está diseñado siguiendo las exigencias del curso UTN **Tecnologías Web III**.
+
+---
+
+## 🛠 Tecnologías Utilizadas
+
+### 🔍 Scraping
+- **Playwright (Chromium headless)** — Scraping dinámico real  
+- **BeautifulSoup + Requests** — Scraping estático  
+- **Hashing SHA-256** — Detección de cambios  
+
+### 🗄 Base de Datos
+- **PostgreSQL 16**  
+- **SQL Schema + backups automáticos**
+
+### 🌐 API
+- **Flask**, **Flask-CORS**  
+- Endpoints REST estructurados  
+
+### 💻 Frontend
+- HTML5, CSS3, JavaScript  
+- Bootstrap 5  
+- FullCalendar.js  
+
+### ⚙ Automatización
+- **APScheduler**  
+- Scheduler cada 30 min  
+- Logging estructurado  
+
+### 🐳 Contenedores
+- Docker  
+- Docker Compose  
+- Imagen con Playwright + Chromium preinstalado  
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
 proyecto-scraper/
 ├── scraper/
 │   ├── scraper_dynamic.py
 │   └── scraper_static.py
+│
 ├── database/
 │   ├── db_manager.py
 │   └── __init__.py
+│
 ├── api/
 │   └── json_api_server.py
+│
 ├── frontend/
 │   ├── index.html
 │   └── static/
@@ -36,19 +76,26 @@ proyecto-scraper/
 │       ├── results.js
 │       ├── files.js
 │       └── calendar.js
+│
 ├── utils/
 │   ├── logger.py
 │   ├── helpers.py
 │   └── json_generator.py
+│
 ├── data/
 │   ├── results.json
 │   ├── files.json
 │   └── events.json
+│
 ├── logs/
 │   └── scraper.log
+│
 ├── downloads/
 ├── docs/
 │   └── guia_inicio.md
+│
+├── Dockerfile
+├── docker-compose.yml
 ├── main.py
 ├── scheduler.py
 ├── setup_database.py
@@ -57,37 +104,19 @@ proyecto-scraper/
 ├── .env
 └── README.md
 ```
-## Configuración
 
-### 1. Instalar PostgreSQL
+---
 
-Descargar e instalar PostgreSQL 16 desde postgresql.org
-Crear base de datos scraper_db
-Anotar la contraseña del usuario postgres
+## ⚙ Configuración (Modo Docker)
 
-### 2. Clonar el Repositorio
+### 1️⃣ Crear archivo `.env`
 
-git clone https://github.com/Cristianrm2606/proyecto-de-web-scrapper-avanzado-con-docker.git
-cd proyecto-de-web-scrapper-avanzado-con-docker
-
-### 3. Crear Entorno Virtual
-
-python -m venv venv
-venv\Scripts\activate
-
-### 4. Instalar Dependencias
-
-pip install -r requirements.txt
-
-### 5. Configurar Variables de Entorno
-
-Editar el archivo .env con tus credenciales:
-
-DB_HOST=localhost
-DB_PORT=5433
+```
+DB_HOST=db
+DB_PORT=5432
 DB_NAME=scraper_db
 DB_USER=postgres
-DB_PASSWORD=tu_password_aqui
+DB_PASSWORD=postgres
 
 API_HOST=0.0.0.0
 API_PORT=5000
@@ -95,113 +124,144 @@ API_PORT=5000
 SCRAPE_INTERVAL=30
 MAX_PAGES=3
 SEARCH_TERM=laptop
-STATIC_URL=https://file-examples.com/
 
-OPENAI_API_KEY=tu_api_key
+STATIC_URL=https://file-examples.com/index.php/sample-documents-download/
+```
 
-### 6. Inicializar Base de Datos
+---
 
-python setup_database.py
+### 2️⃣ Ejecutar Docker Compose
 
-## Uso
+```
+docker-compose build
+docker-compose up
+```
 
-### Ejecutar Scraping Manual
+Servicios desplegados:
 
+| Servicio | Descripción |
+|---------|-------------|
+| scraper_dynamic | Scraping de MercadoLibre |
+| scraper_static | Descarga de archivos estáticos |
+| scraper_scheduler | Tareas automáticas cada 30 minutos |
+| scraper_api | API Flask |
+| scraper_db | PostgreSQL |
+
+---
+
+### 3️⃣ Acceder a los servicios
+
+| Servicio | URL |
+|----------|-----|
+| API | http://localhost:5000 |
+| Dashboard | frontend/index.html |
+| PostgreSQL | localhost:5432 |
+
+---
+
+## ▶ Uso del Proyecto
+
+### Ejecución manual
+
+```
 python main.py
+```
 
-### Iniciar Scheduler (Automático cada 30 min)
+### Scheduler
 
+```
 python scheduler.py
+```
 
-### Iniciar API
+### API
 
+```
 python api/json_api_server.py
+```
 
-La API estará disponible en: http://localhost:5000
+---
 
-### Abrir Dashboard
+## 📡 Endpoints de la API
 
-1. Iniciar la API
-2. Abrir frontend/index.html en el navegador
-3. O usar Live Server en VS Code
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/` | Estado de la API |
+| GET | `/api/products` | Lista de productos |
+| GET | `/api/products/<id>` | Producto individual |
+| GET | `/api/files` | Archivos descargados |
+| GET | `/api/events` | Eventos del sistema |
+| GET | `/api/stats` | Estadísticas |
+| GET | `/api/categories` | Categorías detectadas |
 
-## Endpoints de la API
+---
 
-GET / - Información de la API
-GET /api/health - Estado del servidor
-GET /api/products - Lista de productos
-GET /api/products/<id> - Detalle de producto
-GET /api/files - Archivos descargados
-GET /api/events - Eventos de scraping
-GET /api/stats - Estadísticas generales
-GET /api/categories - Categorías disponibles
+## ⭐ Funcionalidades Principales
 
-## Funcionalidades
-
-- Scraping de sitios dinámicos (Mercado Libre, AliExpress)
-- Scraping de sitios estáticos con descarga de archivos
-- Detección de cambios con hash SHA-256
-- Base de datos PostgreSQL con schema completo
-- API REST con paginación y filtros
-- Dashboard interactivo con estadísticas
+- Scraping dinámico con Playwright (Chromium)
+- Scraping estático + descarga de archivos
+- Comparación con hashing SHA-256
+- Base de datos PostgreSQL integrada
+- API REST profesional
+- Dashboard moderno y modular
 - Calendario de eventos con FullCalendar
-- Automatización con APScheduler
-- Sistema de logs estructurado
-- Manejo robusto de errores
+- Automatización completa Dockerizada
+- Logs detallados y gestión robusta de errores
 
-## Testing
+---
 
-Probar la API:
+## 🧪 Testing
 
+```
 python test_api.py
+```
 
-## Logs
+---
 
-Los logs se guardan en logs/scraper.log con formato estructurado JSON.
+## 📝 Detección de Cambios
 
-## Detección de Cambios
+El sistema detecta:
 
-El sistema detecta automáticamente:
-- Nuevos registros: Inserta + Alerta
-- Registros modificados: Actualiza + Alerta
-- Archivos modificados (hash diferente): Reemplaza
-- Archivos eliminados: Elimina localmente
+- Nuevos registros → Insertar  
+- Registros modificados → Actualizar  
+- Archivos modificados → Reemplazar  
+- Archivos eliminados → Borrarlos localmente  
 
-## Diseño del Sistema
+---
 
-El proyecto sigue una arquitectura modular con separación de responsabilidades:
+## 🎨 Diseño Arquitectónico
 
-1. Capa de Scraping: scraper_dynamic.py y scraper_static.py manejan la extracción de datos
-2. Capa de Datos: database/db_manager.py gestiona todas las operaciones con PostgreSQL
-3. Capa de API: json_api_server.py expone los datos mediante endpoints REST
-4. Capa de Presentación: frontend/ contiene el dashboard interactivo
-5. Capa de Automatización: scheduler.py ejecuta tareas programadas
-6. Utilidades: utils/ contiene helpers, logging y generación de JSON
+```
+Scraper dinámico / estático
+        ↓
+Base de Datos PostgreSQL
+        ↓
+JSON Generator
+        ↓
+API Flask
+        ↓
+Dashboard Web
+```
 
-Flujo de Datos:
-Scraping -> Base de Datos -> JSON Files -> API -> Dashboard
+---
 
-## Autor
+## 👥 Autores
 
-Cristian Rojas 
-Sebastian Alpizar
-Raul Quesada
+- **Cristian Rojas**  
+- **Sebastián Alpízar**  
+- **Raúl Quesada**  
 
+---
 
-## Proyecto Académico
+## 🎓 Proyecto Académico UTN
 
-Universidad Técnica Nacional (UTN)
-Ingeniería en Tecnologías de la Información
-Ciclo: IIIC-2025
-Profesor: Andrés Joseph Jiménez Leandro
+Universidad Técnica Nacional (UTN)  
+Ingeniería en Tecnologías de la Información  
+Curso: **Tecnologías y Sistemas Web III**  
+Profesor: **Andrés Joseph Jiménez Leandro**  
+Ciclo III-C, 2025  
 
-## Notas Importantes
+---
 
-- El scraper respeta las políticas de robots.txt de los sitios
-- Los datos son para uso educativo únicamente
-- Se recomienda no ejecutar el scraper con intervalos menores a 30 minutos
-- Mantener actualizado el requirements.txt con las versiones correctas
+## 📄 Licencia
 
-## Licencia
-
-Este proyecto es de uso académico.
+Proyecto de uso académico — No comercial.
