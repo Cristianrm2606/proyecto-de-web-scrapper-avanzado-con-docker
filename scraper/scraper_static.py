@@ -2,119 +2,118 @@ import requests
 from bs4 import BeautifulSoup
 import hashlib
 import os
-from datetime import datetime
-from utils.logger import setup_logger
+import re
 import time
+from urllib.parse import urljoin
+from utils.logger import setup_logger
 
 logger = setup_logger('scraper_static')
+
+FILE_EXTENSIONS = [
+    ".pdf", ".jpg", ".jpeg", ".png", ".gif",
+    ".mp4", ".mp3", ".zip", ".rar",
+    ".doc", ".docx", ".xls", ".xlsx"
+]
 
 class StaticScraper:
     def __init__(self, download_dir='downloads'):
         self.download_dir = download_dir
         os.makedirs(download_dir, exist_ok=True)
+
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0)"
         })
-    
+
     def calculate_hash(self, content):
-        """Calcula el hash SHA-256 del contenido"""
         return hashlib.sha256(content).hexdigest()
-    
-    def download_file(self, url, filename=None):
-        """Descarga un archivo y retorna su información"""
+
+    def download_file(self, url, suggested_name=None):
         try:
             logger.info(f"Descargando archivo: {url}")
+
             response = self.session.get(url, timeout=30)
             response.raise_for_status()
-            
-            # Obtener nombre del archivo
+
+            # Determinar nombre del archivo
+            filename = suggested_name or url.split("/")[-1].split("?")[0]
             if not filename:
-                filename = url.split('/')[-1].split('?')[0]
-                if not filename:
-                    filename = f"file_{int(time.time())}"
-            
-            # Calcular hash
-            file_hash = self.calculate_hash(response.content)
-            
-            # Guardar archivo
-            file_path = os.path.join(self.download_dir, filename)
-            with open(file_path, 'wb') as f:
+                filename = f"file_{int(time.time())}"
+
+            filepath = os.path.join(self.download_dir, filename)
+
+            with open(filepath, "wb") as f:
                 f.write(response.content)
-            
-            file_info = {
-                'filename': filename,
-                'file_path': file_path,
-                'file_type': response.headers.get('Content-Type', 'unknown'),
-                'file_size': len(response.content),
-                'file_hash': file_hash,
-                'download_url': url
+
+            return {
+                "filename": filename,
+                "file_path": filepath,
+                "file_type": response.headers.get("Content-Type", "unknown"),
+                "file_size": len(response.content),
+                "file_hash": self.calculate_hash(response.content),
+                "download_url": url,
             }
-            
-            logger.info(f"Archivo descargado exitosamente: {filename}")
-            return file_info
-            
+
         except Exception as e:
-            logger.error(f"Error descargando archivo {url}: {e}")
+            logger.error(f"Error descargando {url}: {e}")
             return None
-    
+
     def scrape_static_page(self, url):
-        """Scrapea una página estática HTML"""
         try:
             logger.info(f"Scrapeando página estática: {url}")
             response = self.session.get(url, timeout=30)
             response.raise_for_status()
-            
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Buscar todos los enlaces de descarga
-            files = []
-            
-            # Links con extensiones comunes
-            download_links = soup.find_all('a', href=True)
-            
-            for link in download_links:
-                href = link.get('href')
-                
-                # Filtrar por extensiones de archivo
-                if any(ext in href.lower() for ext in ['.pdf', '.jpg', '.png', '.mp4', '.mp3', '.zip', '.doc', '.docx']):
-                    # Construir URL completa si es relativa
-                    if not href.startswith('http'):
-                        from urllib.parse import urljoin
-                        href = urljoin(url, href)
-                    
-                    file_info = self.download_file(href)
-                    if file_info:
-                        files.append(file_info)
-            
-            logger.info(f"Total de archivos descargados: {len(files)}")
-            return files
-            
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            found_files = []
+
+            # 1. Detectar archivos directos en <a href="">
+            for a in soup.find_all("a", href=True):
+                href = urljoin(url, a["href"])
+
+                if any(ext in href.lower() for ext in FILE_EXTENSIONS):
+                    file = self.download_file(href)
+                    if file:
+                        found_files.append(file)
+
+            # 2. Detectar botones con data-file o data-url
+            for btn in soup.find_all(["button", "a"]):
+                data_url = (
+                    btn.get("data-file")
+                    or btn.get("data-url")
+                    or btn.get("data-download")
+                )
+                if data_url:
+                    download_link = urljoin(url, data_url)
+                    if any(ext in download_link.lower() for ext in FILE_EXTENSIONS):
+                        file = self.download_file(download_link)
+                        if file:
+                            found_files.append(file)
+
+            # 3. Detectar URLs escondidas dentro de scripts con regex
+            script_links = re.findall(r'https?://[^\s"\']+', response.text)
+            for link in script_links:
+                if any(ext in link.lower() for ext in FILE_EXTENSIONS):
+                    file = self.download_file(link)
+                    if file:
+                        found_files.append(file)
+
+            logger.info(f"Total de archivos descargados: {len(found_files)}")
+            return found_files
+
         except Exception as e:
-            logger.error(f"Error scrapeando página estática {url}: {e}")
+            logger.error(f"Error scrapeando {url}: {e}")
             return []
-    
-    def check_file_changes(self, existing_hash, new_hash):
-        """Verifica si un archivo ha cambiado"""
-        return existing_hash != new_hash
-    
+
     def get_local_files(self):
-        """Obtiene lista de archivos locales con sus hashes"""
-        local_files = {}
-        
-        if not os.path.exists(self.download_dir):
-            return local_files
-        
+        local = {}
         for filename in os.listdir(self.download_dir):
-            file_path = os.path.join(self.download_dir, filename)
-            if os.path.isfile(file_path):
-                with open(file_path, 'rb') as f:
-                    content = f.read()
-                    file_hash = self.calculate_hash(content)
-                    local_files[filename] = {
-                        'path': file_path,
-                        'hash': file_hash,
-                        'size': len(content)
-                    }
-        
-        return local_files
+            path = os.path.join(self.download_dir, filename)
+            with open(path, 'rb') as f:
+                data = f.read()
+            local[filename] = {
+                "path": path,
+                "hash": self.calculate_hash(data),
+                "size": len(data)
+            }
+        return local

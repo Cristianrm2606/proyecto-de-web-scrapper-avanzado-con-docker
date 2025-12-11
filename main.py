@@ -19,7 +19,6 @@ class ScraperManager:
         self.static_scraper = StaticScraper()
         
     def run_scraping(self):
-        """Ejecuta el proceso completo de scraping"""
         logger.info("="*60)
         logger.info("INICIANDO PROCESO DE SCRAPING")
         logger.info("="*60)
@@ -32,11 +31,10 @@ class ScraperManager:
             # Scraping dinámico
             logger.info("Ejecutando scraping dinámico...")
             search_term = os.getenv('SEARCH_TERM', 'laptop')
-            max_pages = int(os.getenv('MAX_PAGES', 3))
-            
+
+            # 🔥 FIX: eliminar max_pages
             products = self.dynamic_scraper.scrape_mercadolibre(
-                search_term=search_term,
-                max_pages=max_pages
+                search_term=search_term
             )
             
             logger.info(f"Productos obtenidos: {len(products)}")
@@ -53,13 +51,12 @@ class ScraperManager:
             
             logger.info(f"Nuevos: {total_new}, Actualizados: {total_updated}")
             
-            # Scraping estático (archivos)
+            # Scraping estático
             logger.info("Ejecutando scraping estático...")
             static_url = os.getenv('STATIC_URL', 'https://file-examples.com/index.php/sample-documents-download/')
             
             files = self.static_scraper.scrape_static_page(static_url)
             
-            # Guardar archivos en BD
             for file in files:
                 try:
                     self.db.insert_file(file)
@@ -72,7 +69,6 @@ class ScraperManager:
             logger.info("Generando archivos JSON...")
             self.json_gen.generate_all_json()
             
-            # Registrar evento exitoso
             execution_time = round(time.time() - start_time, 2)
             self.db.log_event(
                 event_type='scraping_completed',
@@ -102,7 +98,6 @@ class ScraperManager:
             return False
     
     def setup_database(self):
-        """Inicializa la base de datos con el schema"""
         logger.info("Configurando base de datos...")
         
         try:
@@ -123,17 +118,14 @@ class ScraperManager:
             return False
 
 def main():
-    """Función principal"""
     manager = ScraperManager()
     
-    # Verificar si necesita setup inicial
     setup_db = os.getenv('SETUP_DATABASE', 'false').lower() == 'true'
     
     if setup_db:
         logger.info("Modo setup: Inicializando base de datos...")
         manager.setup_database()
     
-    # Ejecutar scraping
     success = manager.run_scraping()
     
     if success:
